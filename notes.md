@@ -45,6 +45,29 @@ When creating a new *Redis* instance without specifying any argument, it will tr
 ` on the left it's the port number on the host machine and on the right it's the mapped port in the Docker container
 - info on your container `docker inspect redis-server`
 
+## Dockerfile
+
+- a good practice is to swith to a **regular user**. By default, Docker runs your commands as superuser which a malicious attacker could exploit to gain unrestricted access to your host system. Docker gives **root-level access** to the container and your host machine
+- To avoid this 
+
+```Docker
+RUN useradd --create-home realpython  # create a new user named realpython
+USER realpython                       # tell Docker to use this user from now on
+WORKDIR /home/realpython
+
+```
+
+- Consider setting up a **virtual environment**, you risk to interfere with the container's own system tools
+
+``` Docker
+ENV VIRTUALENV=/home/realpython/venv   # define a helper variable, with the path to your project's virtual env
+RUN python3 -m venv $VIRTUALENV # use venv package to create it 
+ENV PATH="$VIRTUALENV/bin:$PATH"
+# rather than activating with a shell scrit, update the PATH variable
+```
+- the most reliable way of creating and activating a virtual env within your Docker image is to directly modify its PATH env variable
+- This is necessary because activating your env in the usual way would only be temporary and wouldn't affect docker containers derived from your image. Moreover, if you activated the virtual env using Dockerfile's RUN instruction, then it would only last until the next instruction in your Dockerfile because each one starts a new shell section.
+
 # Flask app
 
 ```python
@@ -58,6 +81,8 @@ Your endpoint increments the number of page views in Redis
 
 - To verify : 
 > flask --app page_tracker.app run
+
+## Cache your project dependencies
 
 # Test and Secure web app
 
@@ -82,4 +107,7 @@ By keeping `pytest` separate from the main dependencies, you'll be able to insta
 
 ## Integration tests
 
-- the goal of integration tests is to check how your components interact with each other as parts of a larger system 
+- the goal of integration tests is to check how your components interact with each other as parts of a larger system .
+- add `pytest-timeout` plugin to pyproject.toml to allow to force failure of test cases that take too long to run
+- we add `conftest.py` where we place common fixtures which different types of test will share
+- because `conftest.py` is located one level up in the folder hierarchy, pytest will pick up all the fixtures defined in it and make them visible throughout the nested folders.

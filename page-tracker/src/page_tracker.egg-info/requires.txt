@@ -3,3 +3,4 @@ redis
 
 [dev]
 pytest
+pytest-timeout
