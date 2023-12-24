@@ -325,4 +325,107 @@ To scan your code, you can use `bandit`, which you installed as an optional depe
 # Docker based Continous Integration Pipeline (CI)
 
 - requires **build and test automation** as well as **short-lived code branches** with relatively small
-features to implement
+features to implement. Feature toggles can help with bigger features that would take longer to develop
+
+- To introduce CI you need the following elements:
+    - Version control system
+    - Branching strategy
+    - Build automation
+    - Test automation
+    - Continuous integration server
+    - Frequent integrations
+
+- It exists different control branching models also known as workflows:
+    - Trunk-based Development
+    - Github flow or feature branch workflow (long lived mainline or trunk - the master branch)
+    - Forking Workflow (works well for open source projects)
+    - Release Branching
+    - Git flow
+
+- Steps for Github flow:
+    1. Fetch the latest version of the mainline to your computer
+    2. Create a feature branch form the mainline
+    3. Open a pull request to get early feedback from others.
+    4. keep working on your feature branch
+    5. Fetch the mainline often, merging it into your feature branch and resolving any 
+    potential conflicts locally.
+    6. Build, lint, and test the code on your local branch
+    7. Push your changes whenever the local build and test succeed
+    8. With each push, check the automated tests that run on the CI server against your feature branch
+    9. Reproduce and fix any identified problems locally before pushing the code again
+    10. Once you're done, and all tests pass, request that one or more coworkers review your changes
+    11. Apply their feedback
+    12. close the pull request by merging the feature branch to the mainline
+    13. Check the automated tests running on the CI server against the mainline with the changes from 
+    your feature brach integrated
+    14. Investigate and fix any issues that may be found 
+
+- You can be even more thorough by provisioning a dedicated staging environment with Terraform or Github codesapces
+and deploying your feature branch to the cloud for additional manual testing before closing the pull request.
+
+- You may have many options for setting up a CI server for your Docker app , both online and self-hosted
+Popular choices include CircleCI, Jenkins, and Travis and GitHub Actions
+
+## Learn to speak the GitHub Actions Lingo
+
+-GitHub actions lets you specify one or more workflows triggered by 
+certain events, like pushing code to a branch or opening a new pull request. Each workflow
+can define a number of jobs consisting of steps which will execute on a runner. There are 2 types of 
+runners:
+    - GitHub-Hosted Runners: Ubuntu Linux, Windows, MacOS
+    - Self-Hoted RunnersL On-premises servers that you own and maintain
+
+You can check fro cross-plpateform compatibility
+
+- Unless you say otherwise, the jobs within one workflow will run on separate runners in parallel,
+which can be useful for speeding up builds.
+
+- each step of a job is implemented by an **action** that can be either:
+    1. a custom shell command or a scrip
+    2. A GitHub action defined in another GitHub repo (for example building and pushing Docker Image)
+
+- GitHub uses YAML format for configuring workflows. It looks like for a special `.github/workflows/`
+folder in your repository's root folder
+
+- To open editor in GitHub navigate your browser to a file and hit `E` or click oon the pencil icon.
+
+## Create a Workflow using GitHub Actions
+
+While you're edition the `cii.yml` file, give your new workflow a descriptive name and define the events
+that should trigger it:
+
+```yaml
+
+name: Continuous Integration
+
+on:
+    pull_request:
+        branches:
+            - master
+    push:
+        branches:
+            - master
+
+jobs:
+    build:
+        name: Build Docker image and run end-to-end tests
+        runs-on: ubuntu-latest
+        steps:
+            - name : Checkout code from GitHub
+              uses: actions/checkout@v3
+            - name: Run end-to-end tests
+              run: >
+                docker compose --profile testing up
+                -- build
+                --exit-code-from test-service
+```
+
+The 2 events that will trigger this workflow are:
+    1. Opening or changing a **pull request** against the `master` branch
+    2. **Pushing** code or merging a branch into the `master` branch
+
+You can add a few more attributes to each event to narrow down the triggering conditions.
+
+You specify a job identified as build that will run on the latest Ubuntu runner provider by GitHuh
+Its first step is to check out the single commit that triggered the workflow using the action/checkout
+GitHub action
