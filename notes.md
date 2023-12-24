@@ -11,6 +11,10 @@
 - because your package follow the `src layout` it's convenient to install it in editable mode during dev(`python -m pip install --editable .`).
     This will allow to make change to the source code and have them reflected immediately in the venv without a reinstall
 
+## pyproject.toml
+
+- To install :  > python -m pip install --editable ".[dev]"
+
 # Redis
 
 - `Redis` (remote-dictionary-server) commonly used with caching and data persistence (kind of DB)
